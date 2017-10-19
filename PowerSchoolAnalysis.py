@@ -71,17 +71,28 @@ def getClassData(driver):
     return [[classData[i][0] for i in range(len(classData))],
             [classData[i][1] for i in range(len(classData))]]
 
-def loadData(fileName,updateHistory):
+
+def loadData(fileName, updateHistory):
+    # loads the file
     data = np.load(fileName)
-    allAssignments, updateHistoryInitial, grades = list(data[data.files[1]]),list(data[data.files[0]]),list(data[data.files[2]])
-    print(allAssignments)
-    print(len(updateHistoryInitial))
-    print(updateHistoryInitial)
-    print(len(grades))
-    print(grades)
-    # checks if the variables were assigned right
-    if type(updateHistory == updateHistoryInitial) == bool:
-        allAssignments, updateHistoryInitial, grades = data[data.files[0]], data[data.files[1]], data[data.files[2]]
+    # makes an array of the dimensions of each array
+    lenArray = list(map(lambda x: len(np.shape(x)), [data[data.files[0]],
+                                                     data[data.files[1]],
+                                                     data[data.files[2]]]))
+    # array with 2 dimension is grades array
+    updateIndex = lenArray.index(2)
+    updateHistoryInitial = data[data.files[updateIndex]]
+    # finds the other two arrays
+    firstIndex = lenArray.index(1)
+    secondIndex = lenArray[firstIndex + 1:].index(1) + firstIndex + 1
+    # tries to see which one is three dimensional, since that
+    # one is allAssignments (classes, assignments, individual columns)
+    if len(np.shape(data[data.files[firstIndex]][0])) == 2:
+        allAssignments = data[data.files[firstIndex]]
+        grades = data[data.files[secondIndex]]
+    else:
+        grades = data[data.files[firstIndex]]
+        allAssignments = data[data.files[secondIndex]]
     checkEqual = updateHistory == updateHistoryInitial
     return [checkEqual, allAssignments, updateHistoryInitial, grades]
 
@@ -89,20 +100,22 @@ def loadData(fileName,updateHistory):
 def PSAnalysis(userInput):
     username, password, schoolYear, fileName = userInput
     driver = webdriver.Chrome()
+    driver.set_window_position(-2000, -2000)
     # login
     login(driver, username, password)
     # find classes
     classLinks, grades = getClassData(driver)
 
     # get data from each class into one array
-    allAssignments = ['' for _ in range(6)]
-    classes = ['' for _ in range(6)]
+    allAssignments = ['' for _ in range(len(classLinks))]
+    classes = [['', ''] for _ in range(len(classLinks))]
     for i in range(len(classLinks)):
         # go to each period
         driver.get(classLinks[i])
         # get the tr entries
         assignments = driver.find_elements_by_tag_name('tr')
-        allAssignments[i] = list(map(lambda j: cleanTable(assignments, i, j, schoolYear), range(3, len(assignments))))
+        allAssignments[i] = list(map(lambda j: cleanTable(assignments, i, j, schoolYear),
+                                               range(3,len(assignments))))
         classes[i] = [getClassNames(assignments), getUpdateHistory(driver)]
     # print(allAssignments)
     # print(classes)
@@ -136,12 +149,24 @@ def PSAnalysis(userInput):
     # print(allAssignments)
     driver.close()
 
+    for i in range(len(allAssignments)):
+        allAssignments[i] = np.array(allAssignments[i], dtype=str)
+        classes = np.array(classes, dtype=str)
+        grades = np.array(grades, dtype=str)
 
-
-    np.savez(fileName, allAssignments, classes,grades)
+    np.savez(fileName, allAssignments, classes, grades)
     print('Data saved to file ' + fileName + ' in same directory')
     return [allAssignments, classes]
-
 # PSAnalysis()
-fileName = 'PSData.npz'
-print(loadData(fileName, []))
+
+
+if __name__ == "__main__":
+    username = 'XXXX'
+    password = 'XXXX'
+    schoolYear = ['2015', '2016']
+    fileName = 'PSData.npz'
+
+    # username, password, schoolYear = getUserLogin()
+    fileName = 'PSData.npz'
+    userInput = [username, password, schoolYear, fileName]
+    PSAnalysis(userInput)
