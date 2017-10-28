@@ -1,4 +1,3 @@
-import os.path
 import numpy as np
 
 def getAssignmentRow(assignments,i,j,schoolYear):
@@ -49,22 +48,29 @@ def getUpdateHistory(classPage):
 def getGrades(assignments):
 	return assignments[1].select('td')[3].text
 
-def loadData(fileName,updateHistory):
+def loadData(fileName, updateHistory):
 	# loads the file
 	data = np.load(fileName)
-	# makes an array of the dimensions of each array
-	lenArray = list(map(lambda x: len(np.shape(x)),[data[data.files[0]],data[data.files[1]]]))
-	# array with 2 dimension is grades array
-	updateIndex = lenArray.index(2)
-	updateHistoryInitial = data[data.files[updateIndex]]
-	# finds the other two arrays
-	allAssignments = data[data.files[lenArray.index(1)]]
+	allAssignments = data['allAssignments']
+	updateHistoryInitial = data['classes']
 	checkEqual = np.array([[True]])
+
+	# legacy code where i didn't know how to save
+	# # makes an array of the dimensions of each array
+	# lenArray = list(map(lambda x: len(np.shape(x)),[data[data.files[0]],data[data.files[1]]]))
+	# # array with 2 dimension is grades array
+	# updateIndex = lenArray.index(2)
+	# updateHistoryInitial = data[data.files[updateIndex]]
+	# # finds the other two arrays
+	# allAssignments = data[data.files[lenArray.index(1)]]
+
+
 	try:
-		checkEqual = updateHistory == updateHistoryInitial
+		checkEqual = np.array(updateHistory) == updateHistoryInitial
 	except:
 		checkEqual[0] = [False]
-	return [checkEqual,allAssignments,updateHistoryInitial]
+
+	return [checkEqual, allAssignments, updateHistoryInitial]
 
 def getFileName():
 	return 'PSData.npz'

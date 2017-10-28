@@ -11,12 +11,14 @@ v1.1 - Instead of printing data onto command line, wrote to Excel file with char
 
 v2.0 - Used Beautful Soup 4 to parse and scrape data instead of Selenium, cutting time by more than 3x with no random window showing up.
 
-Usage Instructions coming soon after I upload the final verison.
-
-I understand that the code is cringe-inducing. The Exception handling was rushed to just complete the project and lack of comments was because I understood everything.
-
 There will be a post-final version with much of the code revamped and the architecture rewritten for the sake of clarity.
 
 GUI coming possibly.
 
 
+
+# USAGE INSTRUCTIONS:
+
+Move GradeCheck.lnk to wherever you want and double click.
+Run with GradeCheck.bat
+Excel Spreadsheet with the analysis will be outputted into the same folder of the source files

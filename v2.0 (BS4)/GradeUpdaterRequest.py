@@ -21,7 +21,7 @@ schoolYear = ['2015', '2016']
 gradingPeriod = 'P1'
 
 # uncomment below line if you want to input through the command line
-# username,password,schoolYear = getUserLogin()
+username, password, schoolYear, gradingPeriod = getUserLogin()
 fileName = 'PSData.npz'
 userInput = [username, password, schoolYear, fileName, gradingPeriod]
 
@@ -94,7 +94,8 @@ if os.path.isfile(fileName):
                 print(uHist[i][0] + ' updated!')
         if not(checkEqual.all()):
             print()
-    except:
+    except Exception as e:
+        print(e)
         print('File Corrupted: New Download Required')
         allAssignments,classes = getAssignments(userInput,[s,mainPage])
     else:

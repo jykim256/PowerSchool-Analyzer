@@ -3,38 +3,77 @@ import bs4
 import numpy as np
 from cleanTableR import getAssignmentRow, getClassNames, getUpdateHistory
 import time
+import os.path as osp
 
+yes = ['yes', 'y']
+no = ['no', 'n']
 
 def getUserLogin():
-   username = input('Enter your PowerSchool Username: ')
-   password = input('Enter your PowerSchool Password: ')
+   loginFileName = 'LoginData.npz'
 
-   schoolYear = ''
-   legitimateInput = False
+   noFile = True
+   legitFile = True
 
-   yes = ['yes', 'y']
-   no = ['no', 'n']
+   while True:
+      response = input('Would you like to use the data from before?')
+      if response.lower() in no:
+         legitFile = False
+         break
+      elif response.lower() in yes:
+         break
 
-   while not(legitimateInput):
-      schoolYear = input('Is the school year 2015 - 2016? (Y/N) ')
-      if schoolYear.lower() in yes:
-         schoolYear = ['2015', '2016']
-         legitimateInput = True
-      elif schoolYear.lower() in no:
-         schoolCheck = True
-         while schoolCheck:
-            intercept = input('Enter years since 2015 - 2016 school year:')
+   while noFile:
+      if osp.isfile(loginFileName) and legitFile:
+         with np.load(loginFileName) as data:
             try:
-               intercept = int(intercept)
+               username = str(data['username'])
+               password = str(data['password'])
+               schoolYear = list(data['schoolYear'])
+               gradingPeriod = str(data['gradingPeriod'])
             except:
-               pass
+               # keep it going try again
+               legitFile = False
             else:
-               schoolYear = [str(2015 + intercept), str(2016 + intercept)]
-               schoolCheck = False
-               legitimateInput = True
+               # breaks the loop
+               noFile = False
       else:
-         continue
-   return[username, password, schoolYear]
+         noFile = False
+         username = input('Enter your PowerSchool Username: ')
+         password = input('Enter your PowerSchool Password: ')
+
+         schoolYear = ''
+         legitimateInput = False
+
+
+         while not(legitimateInput):
+            schoolYear = input('Is the school year 2015 - 2016? (Y/N) ')
+            if schoolYear.lower() in yes:
+               schoolYear = ['2015', '2016']
+               legitimateInput = True
+            elif schoolYear.lower() in no:
+               schoolCheck = True
+               while schoolCheck:
+                  offset = input('Enter years since 2015 - 2016 school year:')
+                  try:
+                     offset = int(offset)
+                  except:
+                     pass
+                  else:
+                     schoolYear = [str(2015 + offset), str(2016 + offset)]
+                     schoolCheck = False
+                     legitimateInput = True
+            else:
+               continue
+            gradingPeriod = input('Enter Grading Period {P1, P2, S1, P3, P4, S2}')
+   payload = [username, password, schoolYear, gradingPeriod]
+   np.savez(loginFileName,
+            username=payload[0], 
+            password=payload[1],
+            schoolYear=payload[2],
+            gradingPeriod=payload[3])
+   
+
+   return payload
 
 
 def printTime(c0, message='.'):
@@ -108,7 +147,7 @@ def getAssignments(userInput, loginData=''):
          allAssignments[i] = np.array(allAssignments[i], dtype=str)
       classes = np.array(classes, dtype=str)
 
-      np.savez(fileName, allAssignments, classes)
+      np.savez(fileName, allAssignments=allAssignments, classes=classes)
       print('Data saved to file ' + fileName + ' in same directory')
    return [allAssignments, classes]
 
